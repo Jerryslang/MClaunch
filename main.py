@@ -1,9 +1,70 @@
-import os, random, json, requests, subprocess, zipfile, platform, threading, time
+import os, random, json, subprocess
+import zipfile, platform, threading, time 
+import tomllib, hashlib
 import tkinter as tk
+
+from pathlib import Path
+
+# TOML CONFIG
+with open("config.toml", "rb") as f:
+    try:
+        config = tomllib.load(f)
+    except Exception as e:
+        print(f'Error: Config Error\n{e}')
+        exit()
+
+try: # requests lib check
+    import requests
+except ImportError:
+    subprocess.run(["pip", "install", "requests"])
+    print('(installed dependencies) please restart the script')
+    time.sleep(1);exit()
+
+try: # java install check
+    subprocess.run(['java', '-version'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+except (subprocess.CalledProcessError, FileNotFoundError):
+    raise RuntimeError('Java is required to run this script either its not installed or not added to your systems path. check the README.md for downloads')
+
+# UPDATER (compares md5 hash's (from this file) and (github) )
+launcher_update_prefrence = config["launcher"]["update"]
+if launcher_update_prefrence in ['true','prompt']:
+    def update(filename, mode=config["launcher"]["update"], file_id=random.randint(9999, 99999)):
+        with open(filename, 'r') as local_file:
+            local_file_md5 = hashlib.md5(local_file.read().encode('utf-8')).hexdigest()
+
+        get_file = requests.get(f'https://raw.githubusercontent.com/Jerryslang/MClaunch/refs/heads/main/{filename}')
+        get_file.raise_for_status()
+        get_file_text = get_file.text
+        file_repo_md5 = hashlib.md5(get_file.content).hexdigest()
+        do_update = False
+        if local_file_md5 != file_repo_md5: # if file needs an update
+                print('an update is avaliable the changelog can be found below\nhttps://pastebin.com/KMnAiFyT')
+                if mode == 'true':
+                    do_update = True
+                elif mode == 'prompt':
+                    do_update_prompt = input('would you like to update now? y/n $ ')
+                    if do_update_prompt.lower() == 'y':
+                        do_update = True
+                if do_update == True:
+                    print('downloading...')
+                    with open(f'main-{file_id}.py', 'w') as updated_file:
+                        updated_file.write(get_file_text)
+
+                    return file_id
+                else:
+                    return False
+
+    update_call = update('main.py')
+    if update_call != False:
+        print(f'replace the old files with the files ending in {update_call}')
+        time.sleep(3);exit()
+
 # CONFIG
-VERSION = "1.21.1"
-FAST_DOWNLOAD = False # DOSENT INSTALL ASSETS (USE FOR DEBUG)
-BASE_DIR = os.path.join(os.getcwd(), "instances", VERSION)
+MClaunch_version = "1.1"
+MC_VERSION = config["installer"]["version"] # tells the installer what version to install
+INSTALL_DEBUG = False # dosent install assets for fast installs, if true (usefull for debugging)
+BASE_DIR = os.path.join(Path(__file__).parent, "instances", MC_VERSION)
+MAX_MEMORY = config["java"]["max_memory"]
 
 LIB_DIR = os.path.join(BASE_DIR, "libraries")
 NATIVES_DIR = os.path.join(BASE_DIR, "natives")
@@ -11,16 +72,30 @@ GAME_DIR = os.path.join(BASE_DIR, "game")
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 CLIENT_JAR = os.path.join(BASE_DIR, "client.jar")
 
-USERNAME = 'Player'
-UUID = "00000000-0000-0000-0000-000000000000"
-ACCESSTOKEN = "0"
-USERTYPE = "mojang"
+USERNAME = config["runtime"]["username"]
+UUID = config["runtime"]["uuid"]
+ACCESSTOKEN = config["runtime"]["accesstoken"]
+USERTYPE = config["runtime"]["usertype"]
 
 SYSTEM = platform.system().lower()
 IS_WINDOWS = SYSTEM == "windows"
 IS_LINUX = SYSTEM == "linux"
 
-def log(text, text_box):
+print(f"""
+
+MClaunch:
+  MClaunch Version: {MClaunch_version}
+  Minecraft Version: {MC_VERSION}
+
+  Allocated Memory: {config["java"]["max_memory"]}
+
+  USERNAME: {USERNAME}
+  UUID: {UUID}
+  USERTYPE: {USERTYPE}
+
+""")
+
+def log(text, text_box): # puts {text} in the tkinter {text_box}
     text_box.insert(tk.END, f'{text}\n')
     text_box.see(tk.END)
 
@@ -28,7 +103,6 @@ def download_file(url, dest):
     if not os.path.isfile(dest):
         log(f"Downloading {url} -> {dest}", text_box)
         r = requests.get(url, stream=True)
-        r.raise_for_status()
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         with open(dest, "wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
@@ -44,7 +118,6 @@ def get_version_json_url(version_id):
     manifest_url = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
     log(f"manifest: {manifest_url}", text_box)
     resp = requests.get(manifest_url)
-    resp.raise_for_status()
     manifest = resp.json()
     for version in manifest["versions"]:
         if version["id"] == version_id:
@@ -67,12 +140,12 @@ def download_assets(index_url, asset_index_id):
 
 def main():
     if os.path.exists(CLIENT_JAR):
-        log(f"Instance for version {VERSION} already exists. Skipping installation.", text_box)
+        log(f"Instance for version {MC_VERSION} already exists. Skipping installation.", text_box)
     else:
         os.makedirs(BASE_DIR, exist_ok=True)
 
         # get version metadata
-        version_url = get_version_json_url(VERSION)
+        version_url = get_version_json_url(MC_VERSION)
         version_data = requests.get(version_url).json()
 
         # downloads client.jar
@@ -99,7 +172,7 @@ def main():
                     download_file(native_info["url"], native_path)
                     extract_natives(native_path, NATIVES_DIR)
 
-    version_url = get_version_json_url(VERSION)
+    version_url = get_version_json_url(MC_VERSION)
     version_data = requests.get(version_url).json()
 
     jars = []
@@ -113,7 +186,7 @@ def main():
     main_class = version_data["mainClass"]
     asset_index = version_data["assetIndex"]["id"]
 
-    if FAST_DOWNLOAD == False:
+    if INSTALL_DEBUG == False:
         asset_index_info = version_data["assetIndex"]
         asset_index_url = asset_index_info["url"]
         asset_index_id = asset_index_info["id"]
@@ -121,7 +194,7 @@ def main():
 
     args = [
         "--username", USERNAME,
-        "--version", VERSION,
+        "--version", MC_VERSION,
         "--gameDir", GAME_DIR,
         "--assetsDir", ASSETS_DIR,
         "--assetIndex", asset_index,
@@ -134,7 +207,7 @@ def main():
 
     java_cmd = [
         "java",
-        "-Xmx2G",
+        f'-Xmx{config["java"]["max_memory"]}',
         f"-Djava.library.path={NATIVES_DIR}",
         "-cp", classpath,
         main_class,
