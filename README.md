@@ -22,3 +22,7 @@ requests (downloaded automaticly)
 https://adoptium.net/en-GB/temurin/releases/?os=any&arch=any&version=21
 
 https://www.python.org/downloads/release/python-3130/?featured_on=pythonbytes
+
+### missing java or python but they are installed?
+check your systems path: https://www.c-sharpcorner.com/article/how-to-addedit-path-environment-variable-in-windows-11/
+if there not there add them by adding the folder that contains java or python
