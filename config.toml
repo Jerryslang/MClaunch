@@ -9,6 +9,3 @@ max_memory = "4G" # allocated memory/ram/heap size (Xmx) structured like "2G" me
 
 [installer]
 version = "1.21.1"
-
-[launcher]
-update = "prompt" # updater  // valid values include "true" "prompt" "false"
