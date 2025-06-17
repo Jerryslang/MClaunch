@@ -1,9 +1,6 @@
 # MClaunch
 ## Minecraft Launcher / Downloader (without authentication)
 
-> [!IMPORTANT]  
-> Run from a terminal envrionment since cwd matters
-
 ### windows compatible 
 (tested with): Temurin 21.0.7+6-LTS, Windows 64 bit (.MSI)
 
