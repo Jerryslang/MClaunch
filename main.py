@@ -25,40 +25,6 @@ try: # java install check
 except (subprocess.CalledProcessError, FileNotFoundError):
     raise RuntimeError('Java is required to run this script either its not installed or not added to your systems path. check the README.md for downloads')
 
-# UPDATER (compares md5 hash's (from this file) and (github) )
-launcher_update_prefrence = config["launcher"]["update"]
-if launcher_update_prefrence in ['true','prompt']:
-    def update(filename, mode=config["launcher"]["update"], file_id=random.randint(9999, 99999)):
-        with open(filename, 'r') as local_file:
-            local_file_md5 = hashlib.md5(local_file.read().encode('utf-8')).hexdigest()
-
-        get_file = requests.get(f'https://raw.githubusercontent.com/Jerryslang/MClaunch/refs/heads/main/{filename}')
-        get_file.raise_for_status()
-        get_file_text = get_file.text
-        file_repo_md5 = hashlib.md5(get_file.content).hexdigest()
-        do_update = False
-        if local_file_md5 != file_repo_md5: # if file needs an update
-                print('an update is avaliable the changelog can be found below\nhttps://pastebin.com/KMnAiFyT')
-                if mode == 'true':
-                    do_update = True
-                elif mode == 'prompt':
-                    do_update_prompt = input('would you like to update now? y/n $ ')
-                    if do_update_prompt.lower() == 'y':
-                        do_update = True
-                if do_update == True:
-                    print('downloading...')
-                    with open(f'main-{file_id}.py', 'w') as updated_file:
-                        updated_file.write(get_file_text)
-
-                    return file_id
-                else:
-                    return False
-
-    update_call = update('main.py')
-    if update_call != False:
-        print(f'replace the old files with the files ending in {update_call}')
-        time.sleep(3);exit()
-
 # CONFIG
 MClaunch_version = "1.1"
 MC_VERSION = config["installer"]["version"] # tells the installer what version to install
