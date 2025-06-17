@@ -1,5 +1,6 @@
 # MClaunch V1.1
-## Cross-Compatible (linux x windows) Minecraft Launcher / Downloader (without authentication)
+## Cross-Compatible Minecraft Launcher / Downloader (without authentication)
+(linux and windows are supported)
 
 [Changelog](https://pastebin.com/KMnAiFyT)
 
