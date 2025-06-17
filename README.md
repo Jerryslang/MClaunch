@@ -1,5 +1,7 @@
-# MClaunch
+# MClaunch V1.1
 ## Minecraft Launcher / Downloader (without authentication)
+
+[Changelog](https://pastebin.com/KMnAiFyT)
 
 ### windows compatible 
 (tested with): Temurin 21.0.7+6-LTS, Windows 64 bit (.MSI)
@@ -7,9 +9,10 @@
 ### linux compatible 
 (tested with): java-21-openjdk-headless (Fedora 41 - x86_64 - Updates)
 
-### requires: 
+### requires:
+python 3.11+
 tkinter
-requests
+requests (downloaded automaticly)
 
 ### downloads:
 
