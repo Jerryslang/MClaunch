@@ -27,6 +27,7 @@ https://www.python.org/downloads/release/python-3130/?featured_on=pythonbytes
 check your systems path: 
 
 (windows 11) https://www.c-sharpcorner.com/article/how-to-addedit-path-environment-variable-in-windows-11/
+
 (linux) echo $PATH
 
 if there not there add them by adding the folder that contains java or python
