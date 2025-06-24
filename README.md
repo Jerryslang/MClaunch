@@ -15,7 +15,7 @@ python 3.11+
 
 tkinter
 
-requests (downloaded automaticly)
+requests
 
 ### downloads:
 
